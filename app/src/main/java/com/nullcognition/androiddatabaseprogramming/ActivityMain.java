@@ -8,8 +8,12 @@ import android.view.MenuItem;
 
 public class ActivityMain extends Activity {
 
-  public static final String                            str               = "string";
-  private             android.content.SharedPreferences sharedPreferences = null;
+  public static final String str         = "string";
+  final               long   update_freq = 1000 * 60 * 60 * 24;
+  String fileName = "myFilename.txt";
+  private android.content.SharedPreferences sharedPreferences = null;
+  private long                              lastUpdateTime    = sharedPreferences.getLong("lastupdatekey", 0L);
+  private long                              timeElapsed       = System.currentTimeMillis() - lastUpdateTime;
 
   @Override
   protected void onCreate(Bundle savedInstanceState){
@@ -31,14 +35,58 @@ public class ActivityMain extends Activity {
 
 	// used for caching, syncing with regular updating.
 
+	android.widget.Toast.makeText(this, stringValue, android.widget.Toast.LENGTH_SHORT).show();
+	android.widget.Toast.makeText(this, Boolean.toString(booleanValue), android.widget.Toast.LENGTH_SHORT).show();
+
+	internalStorage();
+
+	readingFromInternalStorage();
+
 	locationCache();
 
 	getStringSetForMultipleStrings();
 
-	android.widget.Toast.makeText(this, stringValue, android.widget.Toast.LENGTH_SHORT).show();
-	android.widget.Toast.makeText(this, Boolean.toString(booleanValue), android.widget.Toast.LENGTH_SHORT).show();
-
 	updateMe();
+  }
+
+  private void internalStorage(){
+	String message = "hello world";
+	try{
+	  java.io.FileOutputStream fos = openFileOutput(fileName, android.content.Context.MODE_PRIVATE); // Context.MODE_APPEND without overwiting
+	  fos.write(message.getBytes());
+	  fos.close();
+	}
+	catch(java.io.IOException e){e.printStackTrace();}
+
+  }
+
+  private void readingFromInternalStorage(){
+	try{
+	  java.io.FileInputStream fileInputStream = openFileInput(fileName);
+	  java.io.InputStreamReader inputStreamReader = new java.io.InputStreamReader(fileInputStream);
+
+	  StringBuilder stringBuilder = new StringBuilder();
+	  char[] inputBUffer = new char[2048];
+	  int l;
+
+	  while((l = inputStreamReader.read(inputBUffer)) != - 1){
+		stringBuilder.append(inputBUffer, 0, 1);
+	  }
+	  String readString = stringBuilder.toString();
+	  deleteFile(fileName);
+	}
+	catch(java.io.IOException e){e.printStackTrace();}
+  }
+
+  private void locationCache(){
+	android.location.LocationManager locationManager = (android.location.LocationManager)this
+	  .getSystemService(android.content.Context.LOCATION_SERVICE);
+	android.location.Location lastKnown = locationManager.getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER);
+	float lat = (float)lastKnown.getLatitude();
+	float lon = (float)lastKnown.getLongitude();
+	android.content.SharedPreferences.Editor editor = sharedPreferences.edit();
+	editor.putFloat("lat", lat).putFloat("lon", lon).commit();
+
   }
 
   private void getStringSetForMultipleStrings(){
@@ -50,26 +98,11 @@ public class ActivityMain extends Activity {
 
 	mySet = sharedPreferences.getStringSet("mySS", new java.util.HashSet<String>(0)); // may be smart to set the capasity of a default to 0
   }
-
-  private void locationCache(){
-	android.location.LocationManager locationManager = (android.location.LocationManager)this.getSystemService(android.content.Context.LOCATION_SERVICE);
-	android.location.Location lastKnown = locationManager.getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER);
-	float lat = (float) lastKnown.getLatitude();
-	float lon = (float) lastKnown.getLongitude();
-	android.content.SharedPreferences.Editor editor = sharedPreferences.edit();
-	editor.putFloat("lat", lat).putFloat("lon", lon).commit();
-
-  }
-
-  long lastUpdateTime = sharedPreferences.getLong("lastupdatekey", 0L);
-  long timeElapsed    = System.currentTimeMillis() - lastUpdateTime;
-
-  final long update_freq = 1000 * 60 * 60 * 24;
 //							millis sec hour day
 
   private void updateMe(){
-	if(timeElapsed > update_freq) { //update
-		android.content.SharedPreferences.Editor editor = sharedPreferences.edit();
+	if(timeElapsed > update_freq){ //update
+	  android.content.SharedPreferences.Editor editor = sharedPreferences.edit();
 	  editor.putLong("lastupdatekey", System.currentTimeMillis()).commit();
 	}
 	// this may be used to cache a users name for a edit text, or remember the applications state ex.changed to silent mode from settings
