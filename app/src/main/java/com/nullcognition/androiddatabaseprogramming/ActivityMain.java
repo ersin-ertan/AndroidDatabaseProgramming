@@ -12,8 +12,8 @@ public class ActivityMain extends Activity {
   final               long   update_freq = 1000 * 60 * 60 * 24;
   String fileName = "myFilename.txt";
   private android.content.SharedPreferences sharedPreferences = null;
-  private long                              lastUpdateTime    = sharedPreferences.getLong("lastupdatekey", 0L);
-  private long                              timeElapsed       = System.currentTimeMillis() - lastUpdateTime;
+  private long lastUpdateTime = 0L;
+  private long timeElapsed    = 0L;
 
   @Override
   protected void onCreate(Bundle savedInstanceState){
@@ -42,11 +42,15 @@ public class ActivityMain extends Activity {
 
 	readingFromInternalStorage();
 
-	locationCache();
+	//locationCache(); // lastKnown is null for emulator location
 
 	getStringSetForMultipleStrings();
 
 	updateMe();
+
+	externalStorage();
+
+	SQLite();
   }
 
   private void internalStorage(){
@@ -78,17 +82,6 @@ public class ActivityMain extends Activity {
 	catch(java.io.IOException e){e.printStackTrace();}
   }
 
-  private void locationCache(){
-	android.location.LocationManager locationManager = (android.location.LocationManager)this
-	  .getSystemService(android.content.Context.LOCATION_SERVICE);
-	android.location.Location lastKnown = locationManager.getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER);
-	float lat = (float)lastKnown.getLatitude();
-	float lon = (float)lastKnown.getLongitude();
-	android.content.SharedPreferences.Editor editor = sharedPreferences.edit();
-	editor.putFloat("lat", lat).putFloat("lon", lon).commit();
-
-  }
-
   private void getStringSetForMultipleStrings(){
 	java.util.Set<String> mySet = new java.util.HashSet<String>();
 	mySet.add("one");
@@ -96,11 +89,12 @@ public class ActivityMain extends Activity {
 	android.content.SharedPreferences.Editor editor = sharedPreferences.edit();
 	editor.putStringSet("mySS", mySet).commit();
 
-	mySet = sharedPreferences.getStringSet("mySS", new java.util.HashSet<String>(0)); // may be smart to set the capasity of a default to 0
+	mySet = sharedPreferences.getStringSet("mySS", new java.util.HashSet<String>(0)); // may be smart to set the capacity of a default to 0
   }
-//							millis sec hour day
 
   private void updateMe(){
+	lastUpdateTime = sharedPreferences.getLong("lastupdatekey", 0L);
+	timeElapsed = System.currentTimeMillis() - lastUpdateTime;
 	if(timeElapsed > update_freq){ //update
 	  android.content.SharedPreferences.Editor editor = sharedPreferences.edit();
 	  editor.putLong("lastupdatekey", System.currentTimeMillis()).commit();
@@ -108,6 +102,47 @@ public class ActivityMain extends Activity {
 	// this may be used to cache a users name for a edit text, or remember the applications state ex.changed to silent mode from settings
   }
 
+  private void externalStorage(){}
+
+  private void SQLite(){
+	SQLiteOpenHelper_ sqLiteOpenHelper = new SQLiteOpenHelper_(this, "myDB", null, 1);
+	android.database.sqlite.SQLiteDatabase sqLiteDatabase = sqLiteOpenHelper.getWritableDatabase();
+
+	// insert using contentvalue class
+	android.content.ContentValues contentValues = new android.content.ContentValues();
+	contentValues.put(com.nullcognition.androiddatabaseprogramming.SQLiteOpenHelper_.fieldName, "john d");
+	sqLiteDatabase.insert(com.nullcognition.androiddatabaseprogramming.SQLiteOpenHelper_.tableName,
+						  com.nullcognition.androiddatabaseprogramming.SQLiteOpenHelper_.fieldName, contentValues);
+
+	// Query using wrapper method
+	android.database.Cursor cursor = sqLiteDatabase.query(com.nullcognition.androiddatabaseprogramming.SQLiteOpenHelper_.tableName,
+														  new String[]{com.nullcognition.androiddatabaseprogramming.SQLiteOpenHelper_.uid, com.nullcognition.androiddatabaseprogramming.SQLiteOpenHelper_.fieldName},
+														  null, null, null, null, null);
+	while(cursor.moveToNext()){
+	  //get columns indices and values
+	  int id = cursor.getInt(cursor.getColumnIndex(com.nullcognition.androiddatabaseprogramming.SQLiteOpenHelper_.uid));
+	  String name = cursor.getString(cursor.getColumnIndex(com.nullcognition.androiddatabaseprogramming.SQLiteOpenHelper_.fieldName));
+	}
+	cursor.close();
+
+	// insert using raw sql query
+	String insertQuery = "INSERT INTO " + com.nullcognition.androiddatabaseprogramming.SQLiteOpenHelper_.tableName +
+						 " (" + com.nullcognition.androiddatabaseprogramming.SQLiteOpenHelper_.fieldName + ") VALUES ('jack d')";
+	sqLiteDatabase.execSQL(insertQuery); // don't want to mess around with the sq language, use a simpler method
+
+	// query using sql select query
+	String query = "SELECT " + com.nullcognition.androiddatabaseprogramming.SQLiteOpenHelper_.uid + ", " + com.nullcognition.androiddatabaseprogramming.SQLiteOpenHelper_.fieldName + " FROM " + com.nullcognition.androiddatabaseprogramming.SQLiteOpenHelper_.tableName;
+	android.database.Cursor cursor1 = sqLiteDatabase.rawQuery(query, null);
+	while(cursor1.moveToNext()){
+	  int id = cursor1.getInt(cursor1.getColumnIndex(com.nullcognition.androiddatabaseprogramming.SQLiteOpenHelper_.uid));
+	  String name = cursor1.getString(cursor1.getColumnIndex(SQLiteOpenHelper_.fieldName));
+	}
+	cursor1.close();
+
+	sqLiteDatabase.close();
+	sqLiteOpenHelper.close();
+
+  }
 
   @Override
   public boolean onCreateOptionsMenu(Menu menu){
@@ -129,6 +164,36 @@ public class ActivityMain extends Activity {
 	}
 
 	return super.onOptionsItemSelected(item);
+  }
+//							millis sec hour day
+
+  /* Checks if external storage is available for read and write */
+  public boolean isExternalStorageWritable(){
+	String state = android.os.Environment.getExternalStorageState();
+	if(android.os.Environment.MEDIA_MOUNTED.equals(state)){
+	  return true;
+	}
+	return false;
+  }
+
+  /* Checks if external storage is available to at least read */
+  public boolean isExternalStorageReadable(){
+	String state = android.os.Environment.getExternalStorageState();
+	if(android.os.Environment.MEDIA_MOUNTED.equals(state) || android.os.Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)){
+	  return true;
+	}
+	return false;
+  }
+
+  private void locationCache(){
+	android.location.LocationManager locationManager = (android.location.LocationManager)this
+	  .getSystemService(android.content.Context.LOCATION_SERVICE);
+	android.location.Location lastKnown = locationManager.getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER);
+	float lat = (float)lastKnown.getLatitude();
+	float lon = (float)lastKnown.getLongitude();
+	android.content.SharedPreferences.Editor editor = sharedPreferences.edit();
+	editor.putFloat("lat", lat).putFloat("lon", lon).commit();
+
   }
 
 
