@@ -160,6 +160,9 @@ public class ActivityMain extends Activity {
 
 	//noinspection SimplifiableIfStatement
 	if(id == R.id.action_settings){
+	  android.content.Intent sActivity = new android.content.Intent(this, ActivitySchema.class);
+	  sActivity.putExtra("sActivity", "value");
+	  startActivity(sActivity);
 	  return true;
 	}
 
