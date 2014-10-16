@@ -29,6 +29,11 @@
 			android:label="@string/title_activity_activity_schema"
 			>
 		</activity>
+		<activity
+			android:name="com.nullcognition.androiddatabaseprogramming.ActivityBasicQuery"
+			android:label="@string/title_activity_activity_basic_query"
+			>
+		</activity>
 	</application>
 
 </manifest>

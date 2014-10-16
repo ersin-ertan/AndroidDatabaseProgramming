@@ -82,6 +82,9 @@ public class ActivitySchema extends Activity {
 
 	//noinspection SimplifiableIfStatement
 	if(id == R.id.action_settings){
+	  android.content.Intent basicQuery = new android.content.Intent(this, ActivityBasicQuery.class);
+	  basicQuery.putExtra("basicQuery", "value");
+	  startActivity(basicQuery);
 	  return true;
 	}
 
