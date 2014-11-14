@@ -70,12 +70,43 @@ public class ContentProviderCitizen extends ContentProvider {
 
   @Override
   public String getType(Uri uri){
-	return ""; // todo fix
+	switch(uriMatcher.match(uri)){
+	  case CITIZENS:
+		return TableCitizen.CONTENT_TYPE;
+	  case SSID:
+		return TableCitizen.CONTENT_ITEM_TYPE;
+	  default:
+		throw new IllegalArgumentException("Unknown URI " + uri);
+	}
   }
 
   @Override
-  public Uri insert(Uri uri, ContentValues values){
-	return android.net.Uri.EMPTY; //todo fix
+  public Uri insert(Uri uri, ContentValues initialValues){
+	//ONLY GENERAL CITIZENS URI IS ALLOWED FOR INSERTS
+	// DOESN'T MAKE SENSE TO SPECIFY A SINGLE CITIZEN
+	if(uriMatcher.match(uri) != CITIZENS){
+	  throw new IllegalArgumentException("Unknown URI " + uri);
+	}
+	// PACKAGE DESIRED VALUES AS A CONTENTVALUE OBJECT
+	ContentValues values;
+
+	if(initialValues != null){
+	  values = new ContentValues(initialValues);
+	}
+	else{
+	  values = new ContentValues();
+	}
+
+	android.database.sqlite.SQLiteDatabase db = databaseHelper.getWritableDatabase();
+	long rowId = db.insert(TableCitizen.TABLE_NAME, com.nullcognition.chapter4.TableCitizen.COL_NAME, values);
+
+	if(rowId > 0){
+	  Uri citizenUri = android.content.ContentUris.withAppendedId(TableCitizen.CONTENT_URI, rowId);
+	  // NOTIFY CONTEXT OF THE CHANGE
+	  getContext().getContentResolver().notifyChange(citizenUri, null);
+	  return citizenUri;
+	}
+	throw new android.database.SQLException("Failed to insert row into " + uri);
   }
 
   @Override
