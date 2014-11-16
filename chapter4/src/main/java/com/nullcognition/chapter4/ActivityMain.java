@@ -12,17 +12,21 @@ public class ActivityMain extends Activity {
   protected void onCreate(Bundle savedInstanceState){
 	super.onCreate(savedInstanceState);
 	setContentView(R.layout.activity_main);
+
 	android.content.ContentResolver cr = getContentResolver();
 	android.content.ContentValues contentValue = new android.content.ContentValues();
+
 	contentValue.put(com.nullcognition.chapter4.TableCitizen.COL_NAME, "Jason Wei");
 	contentValue.put(com.nullcognition.chapter4.TableCitizen.COL_STATE, "CA");
 	contentValue.put(com.nullcognition.chapter4.TableCitizen.COL_INCOME, 100000);
 	cr.insert(TableCitizen.CONTENT_URI, contentValue);
+
 	contentValue = new android.content.ContentValues();
 	contentValue.put(com.nullcognition.chapter4.TableCitizen.COL_NAME, "James Lee");
 	contentValue.put(com.nullcognition.chapter4.TableCitizen.COL_STATE, "NY");
 	contentValue.put(com.nullcognition.chapter4.TableCitizen.COL_INCOME, 120000);
 	cr.insert(TableCitizen.CONTENT_URI, contentValue);
+
 	contentValue = new android.content.ContentValues();
 	contentValue.put(com.nullcognition.chapter4.TableCitizen.COL_NAME, "Daniel Lee");
 	contentValue.put(com.nullcognition.chapter4.TableCitizen.COL_STATE, "NY");
@@ -36,6 +40,7 @@ public class ActivityMain extends Activity {
 	int nameCol = c.getColumnIndex(com.nullcognition.chapter4.TableCitizen.COL_NAME);
 	int stateCol = c.getColumnIndex(com.nullcognition.chapter4.TableCitizen.COL_STATE);
 	int incomeCol = c.getColumnIndex(com.nullcognition.chapter4.TableCitizen.COL_INCOME);
+
 	while(c.moveToNext()){
 	  int id = c.getInt(idCol);
 	  String name = c.getString(nameCol);
