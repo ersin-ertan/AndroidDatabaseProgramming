@@ -7,14 +7,14 @@ import android.net.Uri;
 
 public class ContentProviderCitizen extends ContentProvider {
 
-  public static final  String                                                           AUTHORITY        = "com.nullcognition.chapter4.ContentProviderCitizen";
-  private static final String                                                           DATABASE_NAME    = "citizen.db";
-  private static final int                                                              DATABASE_VERSION = 1;
-  private static final int                                                              CITIZENS         = 1;
-  private static final int                                                              SSID             = 2;
-  private static       android.content.UriMatcher                                       uriMatcher       = null;
-  private static       java.util.HashMap<String, String>                                projectionMap    = null;
-  private              com.nullcognition.chapter4.ContentProviderCitizen.DatabaseHelper databaseHelper   = null;
+  public static final  String                                    AUTHORITY        = "com.nullcognition.chapter4.ContentProviderCitizen";
+  private static final String                                    DATABASE_NAME    = "citizen.db";
+  private static final int                                       DATABASE_VERSION = 1;
+  private static final int                                       CITIZENS         = 1;
+  private static final int                                       SSID             = 2;
+  private static       android.content.UriMatcher                uriMatcher       = null;
+  private static       java.util.HashMap<String, String>         projectionMap    = null;
+  private              com.nullcognition.chapter4.DatabaseHelper databaseHelper   = null;
 
   // static init
   static{
@@ -35,7 +35,7 @@ public class ContentProviderCitizen extends ContentProvider {
   @Override
   public boolean onCreate(){
 
-	databaseHelper = new com.nullcognition.chapter4.ContentProviderCitizen.DatabaseHelper(getContext(), null, null, - 1);
+	databaseHelper = new com.nullcognition.chapter4.DatabaseHelper(getContext(), null, null, - 1);
 	return true;
   }
 
@@ -110,36 +110,61 @@ public class ContentProviderCitizen extends ContentProvider {
   }
 
   @Override
-  public int delete(Uri uri, String selection, String[] selectionArgs){
-	return 0; // todo fix
+  public int delete(Uri uri, String where, String[] whereArgs){
+	android.database.sqlite.SQLiteDatabase db = databaseHelper.getWritableDatabase();
+	int count;
+	switch(uriMatcher.match(uri)){
+	  case CITIZENS:
+// PERFORM REGULAR DELETE
+		count = db.delete(TableCitizen.TABLE_NAME, where, whereArgs);
+		break;
+	  case SSID:
+// FROM INCOMING URI GET SSID
+		String ssid = uri.getPathSegments().
+		  get(TableCitizen.SSID_PATH_POSITION);
+// USER WANTS TO DELETE A SPECIFIC CITIZEN
+		String finalWhere = com.nullcognition.chapter4.TableCitizen.COL_ID + "=" + ssid;
+// IF USER SPECIFIES WHERE FILTER THEN APPEND
+		if(where != null){
+		  finalWhere = finalWhere + " AND " + where;
+		}
+		count = db.delete(TableCitizen.TABLE_NAME, finalWhere, whereArgs);
+		break;
+	  default:
+		throw new IllegalArgumentException("Unknown URI " + uri);
+	}
+	getContext().getContentResolver().notifyChange(uri, null);
+	return count;
+
   }
 
   @Override
-  public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs){
-	return 0;
+  public int update(Uri uri, ContentValues values, String where, String[] whereArgs){
+	android.database.sqlite.SQLiteDatabase db = databaseHelper.getWritableDatabase();
+	int count;
+	switch(uriMatcher.match(uri)){
+	  case CITIZENS:
+// GENERAL UPDATE ON ALL CITIZENS
+		count = db.update(TableCitizen.TABLE_NAME, values, where, whereArgs);
+		break;
+	  case SSID:
+// FROM INCOMING URI GET SSID
+		String ssid = uri.getPathSegments().
+		  get(TableCitizen.SSID_PATH_POSITION);
+// THE USER WANTS TO UPDATE A SPECIFIC CITIZEN
+		String finalWhere = com.nullcognition.chapter4.TableCitizen.COL_ID + "=" + ssid;
+		if(where != null){
+		  finalWhere = finalWhere + " AND " + where;
+		}
+// PERFORM THE UPDATE ON THE SPECIFIC CITIZEN
+		count = db.update(TableCitizen.TABLE_NAME, values, finalWhere, whereArgs);
+		break;
+	  default:
+		throw new IllegalArgumentException("Unknown URI " + uri);
+	}
+	getContext().getContentResolver().notifyChange(uri, null);
+	return count;
   }
 
-  private static class DatabaseHelper extends android.database.sqlite.SQLiteOpenHelper {
-
-	public DatabaseHelper(android.content.Context context, String name, android.database.sqlite.SQLiteDatabase.CursorFactory factory, int version){
-	  super(context, DATABASE_NAME, null, DATABASE_VERSION);
-	}
-
-	@Override
-	public void onCreate(android.database.sqlite.SQLiteDatabase db){
-	  db.execSQL("CREATE TABLE " + TableCitizen.TABLE_NAME +
-				 " (" + TableCitizen.COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-				 TableCitizen.COL_NAME + " TEXT, " +
-				 TableCitizen.COL_STATE + " TEXT," +
-				 TableCitizen.COL_INCOME + " INTEGER);");
-	}
-
-	@Override
-	public void onUpgrade(android.database.sqlite.SQLiteDatabase db, int oldVersion, int newVersion){
-	  db.execSQL("DROP TABLE IF EXISTS " + TableCitizen.TABLE_NAME);
-// CREATE NEW INSTANCE OF SCHEMA
-	  onCreate(db);
-	}
-  }
 
 }
