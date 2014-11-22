@@ -2,8 +2,8 @@
 <manifest package="com.nullcognition.chapter4"
     xmlns:android="http://schemas.android.com/apk/res/android" >
 
-	<uses-permission android:name="android.permission.READ_CONTACTS"/>
-	<uses-permission android:name="android.permission.WRITE_CONTACTS"/>
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <uses-permission android:name="android.permission.WRITE_CONTACTS" />
 
     <application
         android:allowBackup="true"
@@ -31,8 +31,10 @@
             android:name="com.nullcognition.chapter4.ContactsQueryActivity"
             android:label="@string/title_activity_contacts_query" >
         </activity>
+        <activity
+            android:name="com.nullcognition.chapter4.MyListActivity"
+            android:label="@string/title_activity_my_list" >
+        </activity>
     </application>
-
-
 
 </manifest>
