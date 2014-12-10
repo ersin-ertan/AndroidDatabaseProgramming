@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Chapter6BindingtoUi</string>
+    <string name="title_activity_simple_contacts">SimpleContactsActivity</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_custom_mase_adapter">CustomMaseAdapterActivity</string>
+    <string name="title_activity_custom_contacts">CustomContactsActivity</string>
+	<string name="action_next">Next Activity</string>
+
+</resources>

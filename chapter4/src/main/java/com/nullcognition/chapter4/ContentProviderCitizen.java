@@ -35,7 +35,7 @@ public class ContentProviderCitizen extends ContentProvider {
   @Override
   public boolean onCreate(){
 
-	databaseHelper = new com.nullcognition.chapter4.DatabaseHelper(getContext(), null, null, - 1);
+	databaseHelper = new com.nullcognition.chapter4.DatabaseHelper(getContext(), null, null, 1);
 	return true;
   }
 
